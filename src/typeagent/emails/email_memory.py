@@ -20,6 +20,7 @@ from ..knowpro.conversation_base import ConversationBase
 from ..knowpro.convsettings import ConversationSettings
 from ..knowpro.interfaces import Term
 from .email_message import EmailMessage
+import functools
 
 
 class EmailMemorySettings:
@@ -53,6 +54,7 @@ class EmailMemory(ConversationBase[EmailMessage]):
         )
 
     @staticmethod
+    @functools.lru_cache(maxsize=1)
     def create_lang_search_compile_options() -> searchlang.LanguageQueryCompileOptions:
         return searchlang.LanguageQueryCompileOptions(
             apply_scope=True, exact_scope=False, verb_scope=True, term_filter=None
