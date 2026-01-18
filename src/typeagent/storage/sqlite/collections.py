@@ -243,6 +243,8 @@ class SqliteSemanticRefCollection(interfaces.ISemanticRefCollection):
     def __init__(self, db: sqlite3.Connection):
         self.db = db
 
+        self._encoder = json.JSONEncoder()
+
     def _deserialize_semantic_ref_from_row(
         self, row: ShreddedSemanticRef
     ) -> interfaces.SemanticRef:
@@ -267,12 +269,12 @@ class SqliteSemanticRefCollection(interfaces.ISemanticRefCollection):
         semantic_ref_data = semantic_ref.serialize()
 
         # Extract shredded fields (JSON uses camelCase)
-        semref_id = semantic_ref_data["semanticRefOrdinal"]
-        range_json = json.dumps(semantic_ref_data["range"])
-        knowledge_type = semantic_ref_data["knowledgeType"]
-        knowledge_json = json.dumps(semantic_ref_data["knowledge"])
-
-        return (semref_id, range_json, knowledge_type, knowledge_json)
+        return (
+            semantic_ref_data["semanticRefOrdinal"],
+            self._encoder.encode(semantic_ref_data["range"]),
+            semantic_ref_data["knowledgeType"],
+            self._encoder.encode(semantic_ref_data["knowledge"])
+        )
 
     @property
     def is_persistent(self) -> bool:
