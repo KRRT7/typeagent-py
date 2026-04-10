@@ -36,11 +36,6 @@ TESTDATA = os.path.join(os.path.dirname(__file__), "..", "testdata")
 CONFUSE_A_CAT_VTT = os.path.join(TESTDATA, "Confuse-A-Cat.vtt")
 
 
-# ---------------------------------------------------------------------------
-# Helpers
-# ---------------------------------------------------------------------------
-
-
 def make_settings() -> ConversationSettings:
     """Create conversation settings with fake embedding model (no API keys)."""
     model = create_test_embedding_model()
@@ -71,11 +66,6 @@ def synthetic_messages(n: int) -> list[TranscriptMessage]:
         )
         for i in range(n)
     ]
-
-
-# ---------------------------------------------------------------------------
-# Test cases
-# ---------------------------------------------------------------------------
 
 
 @pytest.mark.asyncio
