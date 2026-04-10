@@ -68,10 +68,8 @@ def synthetic_messages(n: int) -> list[TranscriptMessage]:
     ]
 
 
-@pytest.mark.asyncio
-async def test_benchmark_vtt_ingest(async_benchmark):
-    """Benchmark indexing of pre-parsed VTT messages (Confuse-A-Cat, 40 msgs)."""
-    messages = await extract_vtt_messages(CONFUSE_A_CAT_VTT)
+async def run_indexing_benchmark(async_benchmark, messages, message_type):
+    """Shared benchmark harness: fresh DB per round, only hot path timed."""
     settings = make_settings()
     tmpdir = tempfile.mkdtemp()
     counter = itertools.count()
@@ -81,7 +79,7 @@ async def test_benchmark_vtt_ingest(async_benchmark):
         db_path = os.path.join(tmpdir, f"bench_{i}.db")
         storage = SqliteStorageProvider(
             db_path,
-            message_type=ConversationMessage,
+            message_type=message_type,
             message_text_index_settings=settings.message_text_index_settings,
             related_term_index_settings=settings.related_term_index_settings,
         )
@@ -103,77 +101,26 @@ async def test_benchmark_vtt_ingest(async_benchmark):
         )
     finally:
         shutil.rmtree(tmpdir, ignore_errors=True)
+
+
+@pytest.mark.asyncio
+async def test_benchmark_vtt_ingest(async_benchmark):
+    """Benchmark indexing of pre-parsed VTT messages (Confuse-A-Cat, 40 msgs)."""
+    messages = await extract_vtt_messages(CONFUSE_A_CAT_VTT)
+    await run_indexing_benchmark(async_benchmark, messages, ConversationMessage)
 
 
 @pytest.mark.asyncio
 async def test_benchmark_add_messages_50(async_benchmark):
     """Benchmark add_messages_with_indexing with 50 synthetic messages."""
-    messages = synthetic_messages(50)
-    settings = make_settings()
-    tmpdir = tempfile.mkdtemp()
-    counter = itertools.count()
-
-    async def setup():
-        i = next(counter)
-        db_path = os.path.join(tmpdir, f"bench_{i}.db")
-        storage = SqliteStorageProvider(
-            db_path,
-            message_type=TranscriptMessage,
-            message_text_index_settings=settings.message_text_index_settings,
-            related_term_index_settings=settings.related_term_index_settings,
-        )
-        settings.storage_provider = storage
-        transcript = await Transcript.create(settings, name="bench")
-        return transcript, storage, db_path
-
-    async def teardown(setup_rv):
-        _, storage, db_path = setup_rv
-        await storage.close()
-        os.remove(db_path)
-
-    async def target(transcript, storage, db_path):
-        await transcript.add_messages_with_indexing(messages)
-
-    try:
-        await async_benchmark.pedantic(
-            target, setup=setup, teardown=teardown, rounds=20, warmup_rounds=3
-        )
-    finally:
-        shutil.rmtree(tmpdir, ignore_errors=True)
+    await run_indexing_benchmark(
+        async_benchmark, synthetic_messages(50), TranscriptMessage
+    )
 
 
 @pytest.mark.asyncio
 async def test_benchmark_add_messages_200(async_benchmark):
     """Benchmark add_messages_with_indexing with 200 synthetic messages."""
-    messages = synthetic_messages(200)
-    settings = make_settings()
-    tmpdir = tempfile.mkdtemp()
-    counter = itertools.count()
-
-    async def setup():
-        i = next(counter)
-        db_path = os.path.join(tmpdir, f"bench_{i}.db")
-        storage = SqliteStorageProvider(
-            db_path,
-            message_type=TranscriptMessage,
-            message_text_index_settings=settings.message_text_index_settings,
-            related_term_index_settings=settings.related_term_index_settings,
-        )
-        settings.storage_provider = storage
-        transcript = await Transcript.create(settings, name="bench")
-        return transcript, storage, db_path
-
-    async def teardown(setup_rv):
-        _, storage, db_path = setup_rv
-        await storage.close()
-        os.remove(db_path)
-
-    async def target(transcript, storage, db_path):
-        await transcript.add_messages_with_indexing(messages)
-
-    try:
-        await async_benchmark.pedantic(
-            target, setup=setup, teardown=teardown, rounds=20, warmup_rounds=3
-        )
-    finally:
-        shutil.rmtree(tmpdir, ignore_errors=True)
+    await run_indexing_benchmark(
+        async_benchmark, synthetic_messages(200), TranscriptMessage
+    )
