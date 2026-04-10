@@ -10,8 +10,6 @@ import unicodedata
 from ...knowpro import interfaces
 from ...knowpro.interfaces import ScoredSemanticRefOrdinal
 
-_WHITESPACE_RE = re.compile(r"\s+")
-
 
 class SqliteTermToSemanticRefIndex(interfaces.ITermToSemanticRefIndex):
     """SQLite-backed implementation of term to semantic ref index."""
@@ -152,7 +150,7 @@ class SqliteTermToSemanticRefIndex(interfaces.ITermToSemanticRefIndex):
         term = unicodedata.normalize("NFC", term)
 
         # Collapse multiple whitespace characters to single space
-        term = _WHITESPACE_RE.sub(" ", term)
+        term = re.sub(r"\s+", " ", term)
 
         # Convert to lowercase
         return term.lower()

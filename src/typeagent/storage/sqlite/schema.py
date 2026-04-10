@@ -256,29 +256,29 @@ def _set_conversation_metadata(
             )
 
 
-_ALL_SCHEMA_DDL = "\n".join([
-    CONVERSATION_METADATA_SCHEMA,
-    MESSAGES_SCHEMA,
-    SEMANTIC_REFS_SCHEMA,
-    SEMANTIC_REF_INDEX_SCHEMA,
-    MESSAGE_TEXT_INDEX_SCHEMA,
-    PROPERTY_INDEX_SCHEMA,
-    RELATED_TERMS_ALIASES_SCHEMA,
-    RELATED_TERMS_FUZZY_SCHEMA,
-    TIMESTAMP_INDEX_SCHEMA,
-    INGESTED_SOURCES_SCHEMA,
-    SEMANTIC_REF_INDEX_TERM_INDEX,
-    MESSAGE_TEXT_INDEX_MESSAGE_INDEX,
-    MESSAGE_TEXT_INDEX_POSITION_INDEX,
-    RELATED_TERMS_ALIASES_TERM_INDEX,
-    RELATED_TERMS_ALIASES_ALIAS_INDEX,
-    RELATED_TERMS_FUZZY_TERM_INDEX,
-])
-
-
 def init_db_schema(db: sqlite3.Connection) -> None:
     """Initialize the database schema with all required tables."""
-    db.executescript(_ALL_SCHEMA_DDL)
+    cursor = db.cursor()
+
+    # Create all tables
+    cursor.execute(CONVERSATION_METADATA_SCHEMA)
+    cursor.execute(MESSAGES_SCHEMA)
+    cursor.execute(SEMANTIC_REFS_SCHEMA)
+    cursor.execute(SEMANTIC_REF_INDEX_SCHEMA)
+    cursor.execute(MESSAGE_TEXT_INDEX_SCHEMA)
+    cursor.execute(PROPERTY_INDEX_SCHEMA)
+    cursor.execute(RELATED_TERMS_ALIASES_SCHEMA)
+    cursor.execute(RELATED_TERMS_FUZZY_SCHEMA)
+    cursor.execute(TIMESTAMP_INDEX_SCHEMA)
+    cursor.execute(INGESTED_SOURCES_SCHEMA)
+
+    # Create additional indexes
+    cursor.execute(SEMANTIC_REF_INDEX_TERM_INDEX)
+    cursor.execute(MESSAGE_TEXT_INDEX_MESSAGE_INDEX)
+    cursor.execute(MESSAGE_TEXT_INDEX_POSITION_INDEX)
+    cursor.execute(RELATED_TERMS_ALIASES_TERM_INDEX)
+    cursor.execute(RELATED_TERMS_ALIASES_ALIAS_INDEX)
+    cursor.execute(RELATED_TERMS_FUZZY_TERM_INDEX)
 
 
 def get_db_schema_version(db: sqlite3.Connection) -> int:
